@@ -1,73 +1,208 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Krautchan /int/ stats</title>
     <script src="jquery-1.8.3.min.js"></script>
     <script src="http://d3js.org/d3.v2.js"></script>
     <script src="build/kc-map.js"></script>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            position: relative;
+            width: 960px;
+        }
+
+        .axis text {
+            font: 10px sans-serif;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .bar {
+            fill: steelblue;
+            fill-opacity: .9;
+        }
+
+        .x.axis path {
+            display: none;
+        }
+
+        label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        h1 {
+            margin-left: 30px;
+        }
+
+        .loading {
+            color: #666;
+        }
+    </style>
 </head>
-<style>
-
-    body {
-        font: 10px sans-serif;
-    }
-
-    .arc path {
-        stroke: #fff;
-    }
-
-</style>
 <body>
-<h1>Posters on /int/</h1>
+<h1>Bernds per country
+    <small class="loading">loading data.</small>
+</h1>
+
+<label><input type="checkbox"> Sort values</label>
+<script>
+    setInterval(function () {
+        var text = $('.loading').text();
+        if (text.length > 20) {
+            $('.loading').html('loading data');
+        }
+        else {
+            $('.loading').html(text + '.');
+        }
+
+    }, 200);
+</script>
 <script>
 
-    var width = 960,
-            height = 500,
-            radius = Math.min(width, height) / 2;
+    var margin = {top:20, right:20, bottom:30, left:40},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
 
-    var color = d3.scale.ordinal()
-            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+    var formatPercent = d3.format(function (d) {
+        return d.data.size
+    });
 
-    var arc = d3.svg.arc()
-            .outerRadius(radius - 10)
-            .innerRadius(0);
+    var x = d3.scale.ordinal()
+            .rangeRoundBands([0, width], .1, 1);
 
-    var pie = d3.layout.pie()
-            .sort(null)
-            .value(function(d) { return d.size; });
+    var y = d3.scale.linear()
+            .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+            .tickFormat(formatPercent);
 
     var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height)
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
             .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var slice = function(data) {
-        console.log(data);
+    var slice = function (data) {
 
-        var g = svg.selectAll(".arc")
-                .data(pie(data))
-                .enter().append("g")
-                .attr("class", "arc");
+        $('.loading').hide();
 
-        g.append("path")
-                .attr("d", arc)
-                .style("fill", function(d) { return color(d.data.country); });
+        data.forEach(function (d) {
+            d.size = +d.size;
+        });
 
-        g.append("text")
-                .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-                .attr("dy", ".35em")
-                .style("text-anchor", "middle")
-                .text(function(d) { return d.data.size; });
+        x.domain(data.map(function (d) {
+            return d.country;
+        }));
+        y.domain([0, d3.max(data, function (d) {
+            return d.size;
+        })]);
 
-        g.append("image")
-                .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-                .attr("dy", "1em")
-                .attr("xlink:href", function(d) { return "http://krautchan.net/images/balls/" + d.data.country + ".png"})
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+        svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Bernds per country");
+
+        var bars = svg.selectAll(".bar")
+                .data(data)
+                .enter();
+
+        bars.append("rect")
+                .attr("class", "bar")
+                .attr("x", function (d) {
+                    return x(d.country);
+                })
+                .attr("width", x.rangeBand())
+                .attr("y", function (d) {
+                    return y(d.size);
+                })
+                .attr("height", function (d) {
+                    return height - y(d.size);
+                });
+
+        bars.append("image")
+                .attr("class", "countryball")
+                .attr("xlink:href", function (d) {
+                    return "http://krautchan.net/images/balls/" + d.country + ".png"
+                })
+                .attr("x", function (d) {
+                    return x(d.country);
+                })
+                .attr("y", function (d) {
+                    return y(d.size) - 20;
+                })
                 .attr("width", 17)
                 .attr("height", 14);
 
-    };
-</script>
+        d3.select("input").on("change", change);
 
+        var sortTimeout = setTimeout(function () {
+            d3.select("input").property("checked", true).each(change);
+        }, 2000);
+
+        function change() {
+            clearTimeout(sortTimeout);
+
+            // Copy-on-write since tweens are evaluated after a delay.
+            var x0 = x.domain(data.sort(this.checked
+                    ? function (a, b) {
+                return b.size - a.size;
+            }
+                    : function (a, b) {
+                return d3.ascending(a.country, b.country);
+            })
+                    .map(function (d) {
+                        return d.country;
+                    }))
+                    .copy();
+
+            var transition = svg.transition().duration(750),
+                    delay = function (d, i) {
+                        return i * 50;
+                    };
+
+            transition.selectAll(".bar")
+                    .delay(delay)
+                    .attr("x", function (d) {
+                        return x0(d.country);
+                    });
+
+            transition.selectAll(".countryball")
+                    .delay(delay)
+                    .attr("x", function (d) {
+                        return x0(d.country);
+                    });
+
+            transition.select(".x.axis")
+                    .call(xAxis)
+                    .selectAll("g")
+                    .delay(delay);
+        }
+    };
+
+</script>
 </body>
 </html>
