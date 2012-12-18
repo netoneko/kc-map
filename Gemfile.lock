@@ -1,0 +1,15 @@
+GIT
+  remote: https://github.com/opal/opal
+  revision: f511cb423fe32f40f33846dc514bb57e53356559
+  specs:
+    opal (0.3.31)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  opal!
