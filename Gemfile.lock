@@ -1,22 +1,20 @@
-GIT
-  remote: https://github.com/opal/opal
-  revision: f511cb423fe32f40f33846dc514bb57e53356559
-  specs:
-    opal (0.3.31)
-
-GIT
-  remote: https://github.com/opal/opal-jquery
-  revision: 9466ab5ddca06ce3948a9ff21cdccc0b0a7880da
-  specs:
-    opal-jquery (0.0.2)
-
 GEM
   remote: http://rubygems.org/
   specs:
+    coffee-script (2.2.0)
+      coffee-script-source
+      execjs
+    coffee-script-source (1.3.3)
+    execjs (1.4.0)
+      multi_json (~> 1.0)
+    libv8 (3.3.10.4)
+    multi_json (1.3.6)
+    therubyracer (0.9.10)
+      libv8 (~> 3.3.10)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  opal!
-  opal-jquery!
+  coffee-script
+  therubyracer

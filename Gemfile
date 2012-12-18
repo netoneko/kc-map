@@ -1,4 +1,9 @@
 source "http://rubygems.org"
 
-gem 'opal', git: 'https://github.com/opal/opal'
-gem 'opal-jquery', git: 'https://github.com/opal/opal-jquery'
+if RUBY_PLATFORM == 'java'
+  gem 'therubyrhino'
+else
+  gem 'therubyracer'
+end
+
+gem 'coffee-script'
