@@ -4,6 +4,12 @@ GIT
   specs:
     opal (0.3.31)
 
+GIT
+  remote: https://github.com/opal/opal-jquery
+  revision: 9466ab5ddca06ce3948a9ff21cdccc0b0a7880da
+  specs:
+    opal-jquery (0.0.2)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -13,3 +19,4 @@ PLATFORMS
 
 DEPENDENCIES
   opal!
+  opal-jquery!
